@@ -1,5 +1,33 @@
 // 'use client'
 
+// export default function ProtectedPage() {
+//   const [user, setUser] = useState(null);
+//   const router = useRouter();
+
+//   useEffect(() => {
+//     const session = supabase.auth.session();
+//     setUser(session?.user ?? null);
+
+//     const { data: authListener } = supabase.auth.onAuthStateChange(
+//       (_event, session) => {
+//         setUser(session?.user ?? null);
+//       }
+//     );
+
+//     if (!user) {
+//       router.push('/login');
+//     }
+
+//     return () => {
+//       authListener?.unsubscribe();
+//     };
+//   }, [user, router]);
+
+//   if (!user) return null; // Optionally render a loading spinner
+
+//   return <div>Protected Content</div>;
+// }
+
 // import { useState, useEffect } from 'react'
 // import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 // import { faSun, faMoon } from '@fortawesome/free-solid-svg-icons'
@@ -31,13 +59,13 @@
 //     fetchRecentUploads()
 //   }, [])
 
-  // useEffect(() => {
-  //   if (darkMode) {
-  //     document.body.classList.add('dark')
-  //   } else {
-  //     document.body.classList.remove('dark')
-  //   }
-  // }, [darkMode])
+// useEffect(() => {
+//   if (darkMode) {
+//     document.body.classList.add('dark')
+//   } else {
+//     document.body.classList.remove('dark')
+//   }
+// }, [darkMode])
 
 //   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 //     e.preventDefault()
@@ -121,9 +149,9 @@
 //       <header>
 //         {/* <div className="nav">
 
-          // <button onClick={() => setDarkMode(!darkMode)}>
-          //   <FontAwesomeIcon icon={darkMode ? faMoon : faSun} />
-          // </button>
+// <button onClick={() => setDarkMode(!darkMode)}>
+//   <FontAwesomeIcon icon={darkMode ? faMoon : faSun} />
+// </button>
 //         </div> */}
 //         <div className="welcome-message">Welcome, User!</div>
 //       </header>
@@ -164,50 +192,103 @@
 //   )
 // }
 
-'use client'
-
+'use client';
 
 import Image from 'next/image';
 import base from '../app/public/image-slider.png';
 import { Input } from './reusables/Input';
 import { Button } from './reusables/Button';
-import { Navs } from "./reusables/Navs";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Navs } from './reusables/Navs';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { FormEvent, useState, useTransition } from 'react';
+import { loginAction } from './helpers/auth';
 
 export default function Page() {
   const pathname = usePathname();
 
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+
+    startTransition(async () => {
+      const result = await loginAction(formData);
+
+      if (result.error) {
+        setError(result.error);
+        setSuccess(false);
+      } else {
+        setError(null);
+        setSuccess(true);
+        // Redirect or update UI on successful login
+      }
+    });
+  };
+
   return (
     <div>
-      <Navs/>
+      <Navs />
       <div className="flex flex-row  justify-center items-center h-[80vh] ">
-        <div className='flex flex-row w-[100%] max-w-[100%] justify-center gap-[3rem] items-start'>
-        <Image src={base} alt='base'className='w-[100%] max-w-[50%] h-[50%]' />
-        <div className='w-[100%] max-w-[50%]'>
-          <div className="flex flex-row items-center gap-1">
-            <h1 className='font-[500] font-[Kanit] text-[24px] leading-[24px]'>Login • </h1> 
-            <h2 className='font-[300] font-[Kanit] text-[16px] leading-[22px]'>Don’t have an account?</h2>
-            <span className='font-[400] font-[Kanit] underline underline-offset-3 text-[16px] leading-[22px]'> <Link href="/signup">Sign up</Link></span>
-          </div>
-          <p className='mt-4 text-[#808080] font-[Kanit] font-[300] text-[16px] leading-[22px] w-[26.875rem]'>
-            Submit more photos to unlock your creative potential with our photography community
-          </p>
-          <hr className='w-full my-[2.625rem]'/>
-          <div className='flex flex-row gap-2 '>
-            <Input label='Email' placeholder='Your email address' type='email'/>
-            <Input label='Password' placeholder='Enter your password' type='password'/>
-
-          </div>
-          <Button buttonText='Get back in!'/>
-          <div className="flex flex-row items-center gap-1">
-          <h2 className='font-[300] font-[Kanit] text-[16px] leading-[22px]'>Forgot your password?</h2>
-            <span className='font-[400] font-[Kanit] underline underline-offset-3 text-[16px] leading-[22px]'> Reset it</span>
-          
-          </div>
+        <div className="flex flex-row w-[100%] max-w-[100%] justify-center gap-[3rem] items-start">
+          <Image
+            src={base}
+            alt="base"
+            className="w-[100%] max-w-[50%] h-[50%]"
+          />
+          <div className="w-[100%] max-w-[50%]">
+            <div className="flex flex-row items-center gap-1">
+              <h1 className="font-[500] font-[Kanit] text-[24px] leading-[24px]">
+                Login •{' '}
+              </h1>
+              <h2 className="font-[300] font-[Kanit] text-[16px] leading-[22px]">
+                Don’t have an account?
+              </h2>
+              <span className="font-[400] font-[Kanit] underline underline-offset-3 text-[16px] leading-[22px]">
+                {' '}
+                <Link href="/signup">Sign up</Link>
+              </span>
+            </div>
+            <p className="mt-4 text-[#808080] font-[Kanit] font-[300] text-[16px] leading-[22px] w-[26.875rem]">
+              Submit more photos to unlock your creative potential with our
+              photography community
+            </p>
+            <hr className="w-full my-[2.625rem]" />
+            <form onSubmit={handleSubmit}>
+              <div className="flex flex-row gap-2 ">
+                <Input
+                  label="Email"
+                  placeholder="Your email address"
+                  type="email"
+                  name="email"
+                />
+                <Input
+                  label="Password"
+                  placeholder="Enter your password"
+                  type="password"
+                  name="password"
+                />
+              </div>
+              <Button
+                type="submit"
+                buttonText={isPending ? 'Loading' : 'Get back in!'}
+              />{' '}
+            </form>
+            <div className="flex flex-row items-center gap-1">
+              <h2 className="font-[300] font-[Kanit] text-[16px] leading-[22px]">
+                Forgot your password?
+              </h2>
+              <span className="font-[400] font-[Kanit] underline underline-offset-3 text-[16px] leading-[22px]">
+                {' '}
+                Reset it
+              </span>
+            </div>
           </div>
         </div>
       </div>
-      </div>
+    </div>
   );
 }
